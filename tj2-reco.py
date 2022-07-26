@@ -242,7 +242,7 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   correlator.param("ParticleCharge","-1")
   correlator.param("ParticleMass", mass)
   correlator.param("ParticleMomentum", energy)
-  correlator.param("FixPlanesU", "3")
+  #correlator.param("FixPlanesU", "3")
   correlator_path.add_processor(correlator)  
   
   # Finished with path for hit based pre alignment
