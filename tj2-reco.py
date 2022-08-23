@@ -60,23 +60,18 @@ def add_pixelmaskers(path):
   m26hotpixelkiller = Processor(name="M26HotPixelKiller",proctype="HotPixelKiller")
   m26hotpixelkiller.param("InputCollectionName", "zsdata_m26")
   m26hotpixelkiller.param("MaxNormedOccupancy", 5)
-  m26hotpixelkiller.param("MinNormedOccupancy", -1)   # deactivated
+  m26hotpixelkiller.param("MinNormedOccupancy", -1)  
   m26hotpixelkiller.param("NoiseDBFileName", "localDB/NoiseDB-M26.root")
   m26hotpixelkiller.param("OfflineZSThreshold", 0)
-  m26hotpixelkiller.param("MaxOccupancy", 6e-03)
-  m26hotpixelkiller.param("MaskNormalized", "false")
-  m26hotpixelkiller.param("MaskAsAscii", "true")
   path.add_processor(m26hotpixelkiller)
    
 
   tj2hotpixelkiller = Processor(name="TJ2HotPixelKiller", proctype="HotPixelKiller")
   tj2hotpixelkiller.param("InputCollectionName", "zsdata_tj2")
   tj2hotpixelkiller.param("MaxNormedOccupancy", 5)
-  tj2hotpixelkiller.param("MinNormedOccupancy", 0.0)   # mask dead pixels 
+  tj2hotpixelkiller.param("MinNormedOccupancy", -1)  
   tj2hotpixelkiller.param("NoiseDBFileName", "localDB/NoiseDB-TJ2.root")
   tj2hotpixelkiller.param("OfflineZSThreshold", 0)
-  tj2hotpixelkiller.param("MaskNormalized", "false")
-  tj2hotpixelkiller.param("MaxOccupancy", 0.04) # 6e-03)
   path.add_processor(tj2hotpixelkiller)  
   
   return path
@@ -140,6 +135,8 @@ def add_hitmakersDB(path):
   m26goehitmaker.param("ClusterCollection","zscluster_m26")
   m26goehitmaker.param("HitCollectionName","hit_m26")
   m26goehitmaker.param("ClusterDBFileName","localDB/clusterDB-M26.root")
+  m26goehitmaker.param("SigmaUCorrections", "0.698 0.31 0.315")  
+  m26goehitmaker.param("SigmaVCorrections", "0.698 0.31 0.315")
   path.add_processor(m26goehitmaker)  
     
 
@@ -162,13 +159,13 @@ def add_clustercalibrators(path):
   
   m26clustdb = Processor(name="M26ClusterCalibrator",proctype="GoeClusterCalibrator")   
   m26clustdb.param("ClusterDBFileName","localDB/clusterDB-M26.root")  
-  m26clustdb.param("MinClusters","200")
+  m26clustdb.param("MinClusters","100")
   m26clustdb.param("SelectPlanes","1 2 4 5")
   path.add_processor(m26clustdb)  
     
   tj2clustdb = Processor(name="TJ2ClusterCalibrator",proctype="GoeClusterCalibrator")   
   tj2clustdb.param("ClusterDBFileName","localDB/clusterDB-TJ2.root")  
-  tj2clustdb.param("MinClusters","200")
+  tj2clustdb.param("MinClusters","100")
   tj2clustdb.param("MaxEtaBins","7")
   tj2clustdb.param("SelectPlanes","3")
   path.add_processor(tj2clustdb)  
@@ -255,11 +252,8 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   prealigner_path = add_hitmakers(prealigner_path)
    
   trackfinder_loosecut = Processor(name="AlignTF_LC",proctype="FastTracker")
-  trackfinder_loosecut.param("InputHitCollectionNameVec","hit_m26 hit_fei4 hit_tj2")
+  trackfinder_loosecut.param("InputHitCollectionNameVec","hit_m26  hit_tj2")
   trackfinder_loosecut.param("ExcludeDetector", "")
-  # HitQualitySelection==1: use cog hits and goehits for tracking
-  # HitQualitySelection==0: only use goehits for tracking
-  #trackfinder_loosecut.param("HitQualitySelection", 1)
   trackfinder_loosecut.param("MaxTrackChi2", 10000000)
   trackfinder_loosecut.param("MaximumGap", 1)
   trackfinder_loosecut.param("MinimumHits",6)
@@ -273,12 +267,12 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   prealigner_path.add_processor(trackfinder_loosecut)
  
   prealigner = Processor(name="PreAligner",proctype="KalmanAligner")
-  prealigner.param('ErrorsShiftX' , '0 10 10 10 10 10 10 0')
-  prealigner.param('ErrorsShiftY' , '0 10 10 10 10 10 10 0')
-  prealigner.param('ErrorsShiftZ' , '0 0 0 0 0 0 0 0')
-  prealigner.param('ErrorsAlpha'  , '0 0 0 0 0 0 0 0')
-  prealigner.param('ErrorsBeta'   , '0 0 0 0 0 0 0 0')
-  prealigner.param('ErrorsGamma'  , '0 0.01 0.01 0.01 0.01 0.01 0.01 0')
+  prealigner.param('ErrorsShiftX' , '0 10 10 10 10 10 0')
+  prealigner.param('ErrorsShiftY' , '0 10 10 10 10 10 0')
+  prealigner.param('ErrorsShiftZ' , '0 0 0 0 0 0 0')
+  prealigner.param('ErrorsAlpha'  , '0 0 0 0 0 0 0')
+  prealigner.param('ErrorsBeta'   , '0 0 0 0 0 0 0')
+  prealigner.param('ErrorsGamma'  , '0 0.01 0.01 0.01 0.01 0.01 0')
   prealigner_path.add_processor(prealigner)  
 
   # Finished with path for prealigner
@@ -312,9 +306,6 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   trackfinder_tightcut = Processor(name="AlignTF_TC",proctype="FastTracker")
   trackfinder_tightcut.param("InputHitCollectionNameVec","hit_m26  hit_tj2")
   trackfinder_tightcut.param("ExcludeDetector", "")
-  # HitQualitySelection==1: use cog hits and goehits for tracking
-  # HitQualitySelection==0: only use goehits for tracking
-  #trackfinder_tightcut.param("HitQualitySelection", 1)
   trackfinder_tightcut.param("MaxTrackChi2", 100)
   trackfinder_tightcut.param("MaximumGap", 1)
   trackfinder_tightcut.param("MinimumHits",6)
@@ -328,12 +319,12 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   aligner_path.add_processor(trackfinder_tightcut)
    
   aligner = Processor(name="Aligner",proctype="KalmanAligner")
-  aligner.param('ErrorsShiftX' , '0 10 10 10 10 10 10 0' )
-  aligner.param('ErrorsShiftY' , '0 10 10 10 10 10 10 0')
-  aligner.param('ErrorsShiftZ' , '0 10 10 10 10 10 10 0')
-  aligner.param('ErrorsAlpha'  , '0 0 0 0.01 0 0 0 0')
-  aligner.param('ErrorsBeta'   , '0 0 0 0.01 0 0 0 0')
-  aligner.param('ErrorsGamma'  , '0 0.01 0.01 0.01 0.01 0.01 0.01 0')
+  aligner.param('ErrorsShiftX' , '0 10 10 10 10 10 0' )
+  aligner.param('ErrorsShiftY' , '0 10 10 10 10 10 0')
+  aligner.param('ErrorsShiftZ' , '0 10 10 10 10 10 0')
+  aligner.param('ErrorsAlpha'  , '0 0 0 0.01 0 0 0')
+  aligner.param('ErrorsBeta'   , '0 0 0 0.01 0 0 0')
+  aligner.param('ErrorsGamma'  , '0 0.01 0.01 0.01 0.01 0.01 0')
   aligner_path.add_processor(aligner)    
   
   # Finished with path for aligner
@@ -420,16 +411,10 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   return calpaths
 
 
-def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB):
+def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB, caltag):
   """
   Returns a list of tbsw path objects for reconstruciton of a test beam run 
   """
-  
-  linkpixel = dict()
-  linkpixel["OF"] = "765:123 765:248 767:61 767:186"
-  linkpixel["OB"] = "0:61 0:186 2:123 2:248"
-  linkpixel["IF"] = "0:61 0:186 2:123 2:248"
-  linkpixel["IB"] = "765:123 765:248 767:61 767:186"
   
   reco_path = Env.create_path('reco_path')
   reco_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' : maxRecordNrLong })
@@ -454,9 +439,6 @@ def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB):
   trackfinder = Processor(name="TrackFinder",proctype="FastTracker")
   trackfinder.param("InputHitCollectionNameVec","hit_m26")
   trackfinder.param("ExcludeDetector", "3")
-  # HitQualitySelection==1: use cog hits and goehits for tracking
-  # HitQualitySelection==0: only use goehits for tracking
-  #trackfinder.param("HitQualitySelection", 1) 
   trackfinder.param("MaxTrackChi2", "100")
   trackfinder.param("MaximumGap", "1")
   trackfinder.param("MinimumHits","6")
@@ -475,13 +457,12 @@ def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB):
   tj2_analyzer.param("HitCollection","hit_tj2")  
   tj2_analyzer.param("DigitCollection","zsdata_tj2")
   tj2_analyzer.param("DUTPlane","3")
-  tj2_analyzer.param("ReferencePlane","6")
+  #tj2_analyzer.param("ReferencePlane","6")
   tj2_analyzer.param("MaxResidualU","0.2")
   tj2_analyzer.param("MaxResidualV","0.2")
-  tj2_analyzer.param("RootFileName","Histos-TJ2.root")
-  #tj2_analyzer.param("DUTTestPixels",linkpixel[mapping])
+  tj2_analyzer.param("RootFileName","Histos-TJ2-{}.root".format(caltag))
   reco_path.add_processor(tj2_analyzer)   
-  
+
   return [ reco_path ]  
   
   
@@ -491,7 +472,7 @@ def calibrate(params):
    
   # Calibrate of the run using beam data. Creates a folder cal-files/caltag 
   # containing all calibration data. 
-  CalObj = Calibration(steerfiles=steerfiles, name=os.path.splitext(os.path.basename(rawfile))[0] + '-cal')
+  CalObj = Calibration(steerfiles=steerfiles, name=os.path.splitext(os.path.basename(rawfile))[0] + '-' + caltag + '-cal')
   #CalObj.profile = profile
   # Create list of calibration paths
   calpaths = create_calibration_path(CalObj, rawfile, gearfile, energy, useClusterDB)
@@ -505,10 +486,9 @@ def reconstruct(params):
    
   # Reconsruct the rawfile using caltag. Resulting root files are 
   # written to folder root-files/
-  RecObj = Reconstruction(steerfiles=steerfiles, name=os.path.splitext(os.path.basename(rawfile))[0] + '-reco' )
-  #RecObj.profile = profile
+  RecObj = Reconstruction(steerfiles=steerfiles, name=os.path.splitext(os.path.basename(rawfile))[0] + '-' + caltag + '-reco' )
   # Create reconstuction path
-  recopath = create_reco_path(RecObj, rawfile, gearfile, energy, useClusterDB)  
+  recopath = create_reco_path(RecObj, rawfile, gearfile, energy, useClusterDB, caltag)  
   
   # Run the reconstuction  
   RecObj.reconstruct(paths=recopath,ifile=rawfile,caltag=caltag) 
@@ -532,12 +512,14 @@ if __name__ == '__main__':
   parser.add_argument('--datapath', dest='datapath', default='/home/benjamin/desy_tb/', type=str, help='Path to data')
   parser.add_argument('--runno', dest='runno', type=int, help='Run number')
   parser.add_argument('--caltag', dest='caltag', default='', type=str, help='Name of calibration tag to use')
+  parser.add_argument('--prefix', dest='prefix', default='', type=str, help='Name of calibration tag prefix to use')
   args = parser.parse_args()
 
   steerfiles = args.steerfiles
   gearfile = args.gearfile  
   runno = args.runno
   caltag = args.caltag
+  prefix = args.prefix
   rawfile = args.datapath + "run{}.txt".format(runno)
 
   # Make sure that we have an absolute path
@@ -545,7 +527,7 @@ if __name__ == '__main__':
 
   if caltag == '':
     # Tag for calibration data
-    caltag = os.path.splitext(os.path.basename(rawfile))[0]
+    caltag = os.path.splitext(os.path.basename(rawfile))[0] + prefix
     print("Make new alignment ", caltag)
     params = ( rawfile, steerfiles, gearfile, caltag )
     calibrate( params )
