@@ -9,6 +9,12 @@ Usage:
 
 python3 tj2-reco.py   --runno $run  --gearfile $gearfile 
 
+
+To activate the clusterderDB for position reconstruction instead of center of gravity, 
+run command with prefix "_clustdb"
+
+python3 tj2-reco.py   --runno $run  --gearfile $gearfile --prefix _clustdb
+
 Author: Benjamin Schwenker <benjamin.schwenker@phys.uni-goettingen.de>  
 """
 
@@ -20,7 +26,7 @@ maxRecordNrShort = 200000
 
 energy = 4.0
 mass = 0.000511
-useClusterDB = False
+
 
 def add_rawinput(path):
   rawinput = Processor(name="CorryInputProcessor",proctype="CorryInputProcessor")
@@ -521,6 +527,11 @@ if __name__ == '__main__':
   caltag = args.caltag
   prefix = args.prefix
   rawfile = args.datapath + "run{}.txt".format(runno)
+  
+  if prefix == '':
+    useClusterDB = False
+  else: 
+    useClusterDB = True
 
   # Make sure that we have an absolute path
   rawfile = os.path.abspath(rawfile)
