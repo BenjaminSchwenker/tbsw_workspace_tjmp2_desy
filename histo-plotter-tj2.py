@@ -10,7 +10,7 @@ python3 histo-plotter-tj2.py --ifile=root-files/Histos-<something>.root
 Author: Benjamin Schwenker <benjamin.schwenker@phys.uni-goettingen.de>  
 """
 
-#from tbsw import *
+
 import tbsw.residuals as residuals
 import tbsw.efficiency as efficiency
 import tbsw.inpixel as inpixel
