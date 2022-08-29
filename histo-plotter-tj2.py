@@ -62,7 +62,7 @@ for inputfilename in glob.glob(args.ifile):
     inpixel.plot_superpixel(inputfile, histofile, pixeltype=0, upitch=DUTConfig['pitch_u'], vpitch=DUTConfig['pitch_v'], ubins=20, vbins=20, ufold=2, vfold=2)             
       
     # Add superpixel in-pixel efficiency plots 
-    efficiency.plot_super_inpix(inputfile, histofile, basecut="maskedPixel==0", matchcut="hasHit==0 && localChi2<20", upitch=DUTConfig['pitch_u'], vpitch=DUTConfig['pitch_v'], ubins=20, vbins=20)
+    efficiency.plot_super_inpix(inputfile, histofile, basecut="maskedPixel==0 && cellU_fit>{} && cellU_fit<{} && cellV_fit> {} && cellV_fit<{}".format(args.colstart, args.colstop,args.rowstart,args.rowstop), matchcut="hasHit==0 && localChi2<20", upitch=DUTConfig['pitch_u'], vpitch=DUTConfig['pitch_v'], ubins=20, vbins=20)
 
     # Compute efficiency (and error) in specified ROI
     efficiency.extract_roi(inputfile, basecut="maskedPixel==0 && cellU_fit>{} && cellU_fit<{} && cellV_fit> {} && cellV_fit<{}".format(args.colstart, args.colstop,args.rowstart,args.rowstop), matchcut="hasHit==0 && localChi2<20")
