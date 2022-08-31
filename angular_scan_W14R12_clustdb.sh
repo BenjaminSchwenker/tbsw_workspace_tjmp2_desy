@@ -10,6 +10,8 @@ python3 tj2-reco.py   --runno 555  --gearfile geoid50.xml  --prefix _clustdb
 
 python3 tj2-reco.py   --runno 554  --gearfile geoid49.xml  --prefix _clustdb
 
+python3 tj2-reco.py   --runno 544  --gearfile geoid48.xml  --prefix _clustdb
+
 
 
 
