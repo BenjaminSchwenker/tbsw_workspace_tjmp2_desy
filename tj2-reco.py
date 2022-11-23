@@ -82,6 +82,18 @@ def add_pixelmaskers(path):
   
   return path
 
+def add_pixel_calibration(path):
+  pixcal = Processor(name="PixelChargeCalibrator",proctype="PixelChargeCalibrator")
+  pixcal.param('SparseDataCollectionName', "")
+  pixcal.param('CalibratedCollectionName', "")
+  pixcal.param('GainCalibrationDBFileName', "")
+  pixcal.param('CalibFuncName', "")
+  pixcal.param("CalibParaBaseName", "")
+  path.add_processor(pixcal)
+
+  return path
+
+
 def add_clusterizers(path):
   """
   Adds clusterizers to the path
