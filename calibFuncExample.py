@@ -1,5 +1,5 @@
 """
-  Script generating an example GainCalibrationDB file 
+  Script generating a ChargeCalibrationDB file 
   with the structure as it is used for the 
   PixelChargeCalibrator processor.
 
@@ -13,13 +13,31 @@
 
   The function parameters are  binned in pixel of the sensor (column, row).
 
+  Usage: python3 calibFuncExample.py -dut W -geoID
+
+  author: Benjamin Schwenker
+  email: benjamin.schwenker@phys.uni-goettingen.de
+
   author: Helge Christoph Beck
   email: helge-christoph.beck@phys.uni-goettingen.de
 """
 
 from ROOT import TFile, TF1, TH2F
+import argparse
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser('calibFuncExample.py')
+    add_arg = parser.add_argument
+    add_arg('-dut', default="DUT", type=str, help='Name of sensor device')
+    add_arg('-output', default='./calibrationDBFile.root', type=str, help='Path to output DB')
+    add_arg('-geoID', default=-1, type=int, help='GeoID: integer')
+    return parser.parse_args()
 
 if __name__ == '__main__':
+
+  # Parse the command line
+  args = parse_args()
   
   # parameters to provide
   cols = 512
@@ -30,7 +48,8 @@ if __name__ == '__main__':
   baseCalibFuncName = "calibFunc"
   baseCalibParaName = "para"
 
-  gainCalibrationFileName = "calibrationDBFile.root"
+  gainCalibrationFileName = args.output
+  dut = args.dut
 
   # generating file structure
   foutfile = TFile(gainCalibrationFileName, "RECREATE")
@@ -54,7 +73,7 @@ if __name__ == '__main__':
       weight = par + 1 # get your parameters from a dedicated calibration probably
       for c in range(cols):
         for r in range(rows):
-          hpara.Fill(c, r, weight)
+          hpara.Fill(c, r, 0)
       hpara.Write()
 
   foutfile.Close()
