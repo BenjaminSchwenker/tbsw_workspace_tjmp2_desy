@@ -24,6 +24,8 @@ import os
 maxRecordNrLong  = -1
 maxRecordNrShort = 200000
 
+verbosity_level = "MESSAGE2"
+
 energy = 4.0
 mass = 0.000511
 
@@ -52,7 +54,7 @@ def add_unpackers(path):
 
   tj2unpacker = Processor(name="TJ2Unpacker",proctype="HitsFilterProcessor")
   tj2unpacker.param("InputCollectionName","rawdata")
-  tj2unpacker.param("OutputCollectionName", "zsdata_tj2")
+  tj2unpacker.param("OutputCollectionName", "zsdata_tj2_raw")
   tj2unpacker.param("FilterIDs","22")
   path.add_processor(tj2unpacker)   
   
@@ -73,7 +75,7 @@ def add_pixelmaskers(path):
    
 
   tj2hotpixelkiller = Processor(name="TJ2HotPixelKiller", proctype="HotPixelKiller")
-  tj2hotpixelkiller.param("InputCollectionName", "zsdata_tj2")
+  tj2hotpixelkiller.param("InputCollectionName", "zsdata_tj2_raw")
   tj2hotpixelkiller.param("MaxNormedOccupancy", 5)
   tj2hotpixelkiller.param("MinNormedOccupancy", -1)  
   tj2hotpixelkiller.param("NoiseDBFileName", "localDB/NoiseDB-TJ2.root")
@@ -81,6 +83,18 @@ def add_pixelmaskers(path):
   path.add_processor(tj2hotpixelkiller)  
   
   return path
+
+def add_pixel_calibration(path):
+  pixcal = Processor(name="PixelChargeCalibrator",proctype="PixelChargeCalibrator")
+  pixcal.param('SparseDataCollectionName', "zsdata_tj2_raw")
+  pixcal.param('CalibratedCollectionName', "zsdata_tj2")
+  pixcal.param('GainCalibrationDBFileName', "/home/bgnet/vtx/tbsw_workspace_tjmp2_desy/calibrationDBFile.root")
+  pixcal.param('CalibFuncName', "calibFunc")
+  pixcal.param("CalibParaBaseName", "para")
+  path.add_processor(pixcal)
+
+  return path
+
 
 def add_clusterizers(path):
   """
@@ -95,8 +109,6 @@ def add_clusterizers(path):
   m26clust.param("SparseSeedCut", 0)
   m26clust.param("SparseZSCut", 0)   
   path.add_processor(m26clust)  
-
-  
 
   tj2clust = Processor(name="TJ2Clusterizer",proctype="PixelClusterizer")   
   tj2clust.param("NoiseDBFileName","localDB/NoiseDB-TJ2.root")
@@ -191,7 +203,7 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
   
   # Create path for detector level masking of hot channels 
   mask_path = Env.create_path('mask_path')
-  mask_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' : maxRecordNrLong })
+  mask_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' : maxRecordNrLong, 'Verbosity' : verbosity_level})
   
   mask_path = add_rawinput(mask_path)
 
@@ -211,12 +223,13 @@ def create_calibration_path(Env, rawfile, gearfile, energy, useClusterDB):
 
   # Create path for detector level creation of clusters
   clusterizer_path = Env.create_path('clusterizer_path')
-  clusterizer_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' :  maxRecordNrLong})
+  clusterizer_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' :  maxRecordNrLong, 'Verbosity' : verbosity_level})
   
   clusterizer_path = add_rawinput(clusterizer_path)
 
   clusterizer_path.add_processor(geo)
   clusterizer_path = add_unpackers(clusterizer_path) 
+  clusterizer_path = add_pixel_calibration(clusterizer_path)
   clusterizer_path = add_clusterizers(clusterizer_path)    
    
   lciooutput = Processor(name="LCIOOutput",proctype="LCIOOutputProcessor")
@@ -423,7 +436,7 @@ def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB, caltag):
   """
   
   reco_path = Env.create_path('reco_path')
-  reco_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' : maxRecordNrLong })
+  reco_path.set_globals(params={'GearXMLFile': gearfile , 'MaxRecordNumber' : maxRecordNrLong, 'Verbosity' : verbosity_level})
   
   reco_path = add_rawinput(reco_path)
 
@@ -434,7 +447,8 @@ def create_reco_path(Env, rawfile, gearfile, energy, useClusterDB, caltag):
   reco_path.add_processor(geo)  
   
   # Create path for all reconstruction up to hits
-  reco_path = add_unpackers(reco_path)    
+  reco_path = add_unpackers(reco_path)   
+  reco_path = add_pixel_calibration(reco_path) 
   reco_path = add_clusterizers(reco_path)    
    
   if useClusterDB: 
@@ -515,7 +529,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description="Perform calibration and reconstruction of a test beam run")
   parser.add_argument('--steerfiles', dest='steerfiles', default='steering-files/desy-tb-tj2/', type=str, help='Path to steerfiles')
   parser.add_argument('--gearfile', dest='gearfile', default='gear.xml', type=str, help='Name of gearfile inside steerfiles folder')
-  parser.add_argument('--datapath', dest='datapath', default='/home/benjamin/desy_tb/', type=str, help='Path to data')
+  parser.add_argument('--datapath', dest='datapath', default='/home/bgnet/vtx/tbsw_workspace_tjmp2_desy/data_desy/', type=str, help='Path to data')
   parser.add_argument('--runno', dest='runno', type=int, help='Run number')
   parser.add_argument('--caltag', dest='caltag', default='', type=str, help='Name of calibration tag to use')
   parser.add_argument('--prefix', dest='prefix', default='', type=str, help='Name of calibration tag prefix to use')
