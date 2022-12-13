@@ -84,11 +84,12 @@ def add_pixelmaskers(path):
   
   return path
 
+
 def add_pixel_calibration(path):
-  pixcal = Processor(name="PixelChargeCalibrator",proctype="PixelChargeCalibrator")
+  pixcal = Processor(name="PixelChargeCalibrator", proctype="PixelChargeCalibrator")
   pixcal.param('SparseDataCollectionName', "zsdata_tj2_raw")
   pixcal.param('CalibratedCollectionName', "zsdata_tj2")
-  pixcal.param('GainCalibrationDBFileName', "/home/bgnet/vtx/tbsw_workspace_tjmp2_desy/calibrationDBFile.root")
+  pixcal.param('GainCalibrationDBFileName', "steering-files/desy-tb-tj2/TJ2calibrationDBFile.root")
   pixcal.param('CalibFuncName', "calibFunc")
   pixcal.param("CalibParaBaseName", "para")
   path.add_processor(pixcal)
@@ -99,7 +100,7 @@ def add_pixel_calibration(path):
 def add_clusterizers(path):
   """
   Adds clusterizers to the path
-  """  
+  """
     
   m26clust = Processor(name="M26Clusterizer",proctype="PixelClusterizer")   
   m26clust.param("NoiseDBFileName","localDB/NoiseDB-M26.root")

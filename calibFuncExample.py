@@ -26,15 +26,13 @@ from ROOT import TFile, TF1, TH2F
 import argparse
 import pandas as pd
 
-df = pd.read_csv('charge_calib_W14R12_NF_test.csv')
-
 
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser('calibFuncExample.py')
     add_arg = parser.add_argument
     add_arg('-dut', default="DUT", type=str, help='Name of sensor device')
-    add_arg('-output', default='./calibrationDBFile.root', type=str,
+    add_arg('-output', default='./steering-files/desy-tb-tj2/TJ2calibrationDBFile.root', type=str,
             help='Path to output DB')
     add_arg('-geoID', default=-1, type=int, help='GeoID: integer')
     return parser.parse_args()
@@ -44,6 +42,9 @@ if __name__ == '__main__':
 
     # Parse the command line
     args = parse_args()
+
+    # Load file with calibration data, to be produced by calibration script from measurements
+    df = pd.read_csv('charge_calib_W14R12_NF_test.csv')
 
     # parameters to provide
     cols = 512
@@ -65,14 +66,13 @@ if __name__ == '__main__':
         detDir = foutfile.mkdir("d" + str(sensorID))  # creating folder for sensor
         detDir.cd()
         funcName = baseCalibFuncName  # function name is the same for all sensors in the file, differentiated by the folders
-        fucalib = TF1(funcName, "10.1*(-[1] + [0] * [3] + x + sqrt([1]**2 + 4 * [0]* [2] + 2 *[0]* [1] *[3] + [0]**2 * [3]**2 - 2 *[1] *x - 2 *[0] *[3] *x + x**2))/(2 *[0])", 0.0, 128.0)  # creating calibration function, use whatever you need as function and range
-        # ucalib = TF1(funcName, "1+0*(-[1] + [0] * [3] + x + sqrt([1]**2 + 4 * [0]* [2] + 2 *[0]* [1] *[3] + [0]**2 * [3]**2 - 2 *[1] *x - 2 *[0] *[3] *x + x**2))/(2 *[0])", 0.0, 128.0)  # creating calibration function, use whatever you need as function and range
+        fucalib = TF1(funcName, "(10.1/(2*[0]))*(-[1]+[0]*[3]+x+ sqrt([1]**2+4*[0]*[2]+2*[0]*[1]*[3]+x**2+[0]**2*[3]**2-2*[0]*[3]*x-2*[1]*x))", 0.0, 128.0)  # creating calibration function, use whatever you need as function and range
 
         # setting base parameters could be needed for non standard functions. Consult the TF1 reference.
-        fucalib.SetParameters(0, 0.134)  # just set some values from W14R12 NF
-        fucalib.SetParameters(1, 2.6)  # just set some values from W14R12 NF
-        fucalib.SetParameters(2, 1.9e02)  # just set some values from W14R12 NF
-        fucalib.SetParameters(3, 26)  # just set some values from W14R12 NF
+        fucalib.SetParameter(0, 0.134)  # just set some values from W14R12 NF
+        fucalib.SetParameter(1, 2.6)  # just set some values from W14R12 NF
+        fucalib.SetParameter(2, 190)  # just set some values from W14R12 NF
+        fucalib.SetParameter(3, 26)  # just set some values from W14R12 NF
 
         fucalib.Draw()
         fucalib.Write()
@@ -87,6 +87,7 @@ if __name__ == '__main__':
             for c in range(cols):
                 for r in range(rows):
                     arr = df[str(c)][r][1:-1].split(',')
+                    print(arr)
                     hpara.Fill(c, r, float(arr[par]))
             hpara.Write()
 
